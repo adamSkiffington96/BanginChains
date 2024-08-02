@@ -1,0 +1,22 @@
+# Blender MTL File: 'FrisbeeGolfBasket.blend'
+# Material Count: 2
+
+newmtl MatPainted
+Ns 129.959997
+Ka 1.000000 1.000000 1.000000
+Kd 0.005680 0.005680 0.005680
+Ks 0.369091 0.369091 0.369091
+Ke 0.0 0.0 0.0
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl MatStainlessSteel
+Ns 422.863106
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 0.926818 0.958817
+Ks 0.489091 0.489091 0.489091
+Ke 0.0 0.0 0.0
+Ni 1.450000
+d 1.000000
+illum 3
