@@ -22,25 +22,34 @@ public class TriggerDiscHandler : MonoBehaviour
 
     private void OnCollisionStay(Collision collision)
     {
-        if (collision.collider.CompareTag("Ground"))
+        // We are now using the rigidbody's natural movement rather than scripted
+        if (!grounded)
         {
-            grounded = true;
+            if (collision.collider.CompareTag("Ground"))
+            {
+                grounded = true;
 
-            print("Disc now grounded");
+                print("Disc now grounded");
 
-            rb.interpolation = RigidbodyInterpolation.None;
-            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+                rb.interpolation = RigidbodyInterpolation.None;
+                rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            }
         }
+        
         print(collision.collider.tag);
     }
 
     private void Update()
     {
+        // Simplest way to simulate the disc spinning during flight. We could vary the spin rate depending on the throw force/velocity and drag
         if (golfer.StateThrown())
         {
             if (!grounded)
                 CurrentDisc.transform.Rotate(new Vector3(0, rotateDiscSpeed * Time.deltaTime, 0));
         }
-        
+        if (Input.GetKeyUp(KeyCode.R))
+        {
+            grounded = false;
+        }
     }
 }

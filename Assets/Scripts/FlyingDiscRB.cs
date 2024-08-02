@@ -6,13 +6,9 @@ public class FlyingDiscRB : MonoBehaviour
 {
     public float speed = 5f;
     //public float drag = 1f;
-    public float lift = 1f;
+    public float liftModifier = 1f;
 
     public Transform DiscHandle;
-
-    //private Vector3 _velocity = Vector3.zero;
-
-    //private Vector3 _moveForce = Vector3.zero;
 
     private float _currSpeed = 0f;
 
@@ -44,8 +40,6 @@ public class FlyingDiscRB : MonoBehaviour
 
     public Rigidbody rb;
 
-    private bool grounded = false;
-
     public float distToGround = 1f;
 
     public float curvePower = 0.2f;
@@ -54,10 +48,47 @@ public class FlyingDiscRB : MonoBehaviour
     private void Start()
     {
         _currSpeed = speed;
-        //_moveForce = (_currSpeed * DiscHandle.forward.normalized) * Time.deltaTime;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+    }
+
+    private void Update()
+    {
+        if (Input.GetKey(KeyCode.R))
+        {
+            //  Moving the disc back to the player to make a new throw
+            //  It also creates a cool effect, pulling the disc back into your hand rather than it magically re-appearing
+            if (!positionReset)
+            {
+                if ((DiscHandle.position - transform.position).magnitude > 0.5f)
+                {
+                    DiscHandle.position = Vector3.Lerp(DiscHandle.position, transform.position, Time.deltaTime * getDiscSpeed);
+                    rb.velocity = Vector3.zero;
+                }
+                else
+                {
+                    Rethrow();
+                }
+            }
+        }
+
+        if (Input.GetMouseButtonDown(0)) {
+            ThrowDisc();
+        }
+
+        if (_thrown) {
+            MoveDisc();
+            CalcLift();
+        }
+        else {
+            TiltAngle();
+        }
+
+        UIAngle();
+
+        if (!Input.GetMouseButton(1))
+            CharacterControl();
     }
 
     public bool StateThrown()
@@ -67,30 +98,23 @@ public class FlyingDiscRB : MonoBehaviour
 
     private void CalcLift()
     {
-        // Define drag
+        // Define a drag force
         //Vector3 dragForce = (-drag * rb.velocity) * Time.deltaTime;
 
-        // Define lift
-        Vector3 nForce = lift * rb.velocity.sqrMagnitude * Vector3.Project(-Physics.gravity, DiscHandle.up.normalized).normalized;
+        // Define normal force as the disc normal * our velocity
+        Vector3 nForce = liftModifier * rb.velocity.sqrMagnitude * Vector3.Project(-Physics.gravity, DiscHandle.up.normalized).normalized;
 
-        // Clamp lift to gravity's magnitude 
+        // Clamp lift mag to gravity's magnitude 
         if (nForce.magnitude > Physics.gravity.magnitude)
             nForce = Vector3.Project(-Physics.gravity, DiscHandle.up.normalized);
 
         Vector3 liftForce = Time.deltaTime * nForce;
 
-        // Define gravity
-        //Vector3 gravity = Physics.gravity * Time.deltaTime;
-
-        //Update throw force and direction
-        //_moveForce = (_currSpeed * DiscHandle.forward.normalized) * Time.deltaTime;
-
         // Curve mechanics
         Vector3 sideDir = Vector3.Cross(DiscHandle.up, rb.velocity).normalized;
         Vector3 curve = (sideDir * curveAmount * curvePower) * Time.deltaTime;
 
-        // Apply all forces to our velocity
-        //_velocity += gravity + _moveForce + dragForce + liftForce + curve;
+        // Apply the lift force and curve mechanics
         rb.velocity += (liftForce + curve);
 
         // Update the position
@@ -102,12 +126,6 @@ public class FlyingDiscRB : MonoBehaviour
     private void MoveDisc()
     {
         _currSpeed = Mathf.Lerp(_currSpeed, 0f, Time.deltaTime * 6f);
-
-        float rotSpeed = (-curveAmount * _OrientSpeed) / rb.velocity.magnitude;
-        //DiscHandle.RotateAround(DiscHandle.position, _velocity.normalized, rotSpeed * Time.deltaTime);
-
-        //CurrentDisc.transform.Rotate(new Vector3(0, rotateDiscSpeed * Time.deltaTime, 0));
-
     }
 
     private void OnCollisionStay(Collision collision)
@@ -119,7 +137,7 @@ public class FlyingDiscRB : MonoBehaviour
     {
         if (Input.GetMouseButton(1))
         {
-            // Disc tilting (Anhyzer/Hyzer)
+            // Disc tilting (Anhyzer/Hyzer) (RMB)
 
             float mouseX = Input.GetAxis("Mouse X");
             if (mouseX > 0)
@@ -127,6 +145,8 @@ public class FlyingDiscRB : MonoBehaviour
                 if (curveAmount < maxCurve)
                 {
                     curveAmount += mouseX * tiltSpeed * Time.deltaTime;
+                    // Disc rotation may be handled by manipulating the transform or the rigidbody
+
                     //DiscHandle.eulerAngles = new Vector3(DiscHandle.eulerAngles.x, DiscHandle.eulerAngles.y, -curveAmount);
                     rb.rotation = Quaternion.Euler(DiscHandle.eulerAngles.x, DiscHandle.eulerAngles.y, -curveAmount);
                 }
@@ -147,6 +167,8 @@ public class FlyingDiscRB : MonoBehaviour
 
     private void UIAngle()
     {
+        //  Showing the angle of the disc on screen - along with a nifty slider!
+
         float angle = curveAmount;
         float maxAngle = maxCurve;
 
@@ -170,7 +192,7 @@ public class FlyingDiscRB : MonoBehaviour
 
     private void ThrowDisc()
     {
-        //_velocity = Vector3.zero;
+        //  Resetting variables for a throw and adding an initial force
 
         DiscHandle.parent = null;
 
@@ -189,6 +211,7 @@ public class FlyingDiscRB : MonoBehaviour
 
     private void Rethrow()
     {
+        // Resetting the disc for a new throw
         _currSpeed = 0f;
 
         rb.isKinematic = true;
@@ -198,63 +221,14 @@ public class FlyingDiscRB : MonoBehaviour
         _thrown = false;
 
         curveAmount = 0f;
-        //_moveForce = Vector3.zero;
 
         DiscHandle.localPosition = Vector3.zero;
         DiscHandle.localEulerAngles = Vector3.zero;
 
-        //DiscParent.localEulerAngles = Vector3.zero;
         CurrentDisc.transform.localEulerAngles = Vector3.zero;
-
-        //rb.velocity = Vector3.zero;
-        //rb.angularVelocity = Vector3.zero;
-
-        //discReturned = true;
 
         positionReset = true;
     }
-
-    private void Update()
-    {
-        if (Input.GetKey(KeyCode.R))
-        {
-            if (!positionReset)
-            {
-                if ((DiscHandle.position - transform.position).magnitude > 0.5f)
-                {
-                    DiscHandle.position = Vector3.Lerp(DiscHandle.position, transform.position, Time.deltaTime * getDiscSpeed);
-                    rb.velocity = Vector3.zero;
-                }
-                else
-                {
-                    Rethrow();
-                }
-            }
-        }
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            ThrowDisc();
-        }
-
-        if (_thrown)
-        {
-            MoveDisc();
-            CalcLift();
-
-            
-        }
-        else
-        {
-            TiltAngle();
-        }
-
-        UIAngle();
-
-        if (!Input.GetMouseButton(1))
-            CharacterControl();
-    }
-
 
     private void CharacterControl()
     {
