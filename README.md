@@ -1,7 +1,7 @@
 
 # Bangin Chains
 
-A brief description of what this project does and who it's for
+Disc golf simulation with accurate lift mechanics, and the ability to tilt your disc hyzer/anhyzer before a throw
 
 
 ## Screenshots
@@ -11,11 +11,12 @@ A brief description of what this project does and who it's for
 
 ## Features
 
-- Light/dark mode toggle
-- Live previews
-- Fullscreen mode
-- Cross platform
-
+- Lift mechanics
+- Throw disc at different angles
+- Disc curve
+- Follow cam
+- Return disc
+  
 
 ## Snippets
 
@@ -421,12 +422,4 @@ public class TriggerDiscHandler : MonoBehaviour
 </details>
 
 
-## Optimizations
-
-What optimizations did you make in your code? E.g. refactors, performance improvements, accessibility
-
-
-## Demo
-
-Insert gif or link to demo
 
